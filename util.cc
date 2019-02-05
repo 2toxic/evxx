@@ -36,7 +36,7 @@ void log (int lvl, const char *fmt, ...) {
         case LOG_WARN: strcpy (label, "\x1b[35mW\x1b[0m"); break;
         case LOG_FAIL: strcpy (label, "\x1b[31mF\x1b[0m"); break;
         default:
-            FAIL_MSG ("1 <= lvl <= 4 is not true"); break;
+            die_msg ("1 <= lvl <= 4 is not true"); break;
     }
 
     fprintf (stderr, " %s %s\n", label, buf);
@@ -58,16 +58,18 @@ time :: time (const time_t sec) {
 }
 
 time :: time (std::string str) {
-    auto delim_pos = str.find ('n');
-    if (delim_pos == std::string::npos) {
+    size_t sec_len =  sizeof (sec_type)  * 2,
+           nsec_len = sizeof (nsec_type) * 2;
+    if (str.size () < sec_len + nsec_len) {
         tm.tv_sec = 0;
         tm.tv_nsec = 0;
         return;
     }
-    std::string sec_str (str.begin (), str.begin () + delim_pos);
-    std::string nsec_str (str.begin () + delim_pos + 1, str.end ());
-    tm.tv_sec = std::stoll (sec_str);
-    tm.tv_nsec = std::stoll (nsec_str);
+
+    std::string sec_str (str.begin (), str.begin () + sec_len);
+    std::string nsec_str (str.begin () + sec_len + 1, str.end ());
+    tm.tv_sec = std::stoll (sec_str, nullptr, 16);
+    tm.tv_nsec = std::stoll (nsec_str, nullptr, 16);
 }
 
 double time :: to_sec () const {
@@ -75,14 +77,12 @@ double time :: to_sec () const {
 }
 
 std::string time :: to_string () const {
-    std::stringstream ss;
-    ss << tm.tv_sec << 'n' << tm.tv_nsec;
-    return ss.str ();
+    return n2hex (tm.tv_sec) + n2hex (tm.tv_nsec);
 }
 
 time time :: now () {
-    timespec ts;
-    clock_gettime (CLOCK_MONOTONIC, &ts);
+    time_type ts;
+    clock_gettime (CLOCK_REALTIME, &ts);
     return time (ts.tv_sec, ts.tv_nsec);
 }
 
@@ -121,17 +121,12 @@ bool operator != (const time& lhs, const time& rhs) {
 
 
 path :: path ():
-    path_ (),
-    is_absolute_ (false)
+    path_ ()
 {}
 
 path :: path (std::string src):
-    path_ (src),
-    is_absolute_ (false)
-{
-    if (path_.size () > 0 && path_[0] == '/')
-        is_absolute_ = true;
-}
+    path_ (src)
+{}
 
 const char * path :: c_str () const {
     return path_.c_str ();
@@ -152,7 +147,7 @@ path& path :: operator /= (const path& rhs) {
 }
 
 bool path :: is_absolute () const {
-    return is_absolute_;
+    return path_.size () > 0 && path_[0] == '/';
 }
 
 bool path :: exists () const {
@@ -160,7 +155,7 @@ bool path :: exists () const {
 }
 
 bool path :: is_root () const {
-    return is_absolute () && path_ == "/";
+    return path_ == "/";
 }
 
 path path :: absolute () const {
@@ -173,7 +168,6 @@ path path :: absolute () const {
 
     path res ((std::string (buf)));
     free (buf);
-    res.is_absolute_ = true;
     return res;
 }
 
@@ -186,8 +180,10 @@ path path :: dirname () const {
 }
 
 path path :: cwd () {
-    // FIXME
-    return path (".").absolute ();
+    char * c_cwd = get_current_dir_name ();
+    path result ((c_cwd));
+    free (c_cwd);
+    return result;
 }
 
 std::string path :: str () const {

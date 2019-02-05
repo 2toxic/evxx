@@ -36,14 +36,11 @@ private:
 
 class path {
     std::string path_;
-    bool is_absolute_;
 
 public:
     path ();
     explicit path (std::string);
     path (const path&) = default;
-
-    const char *c_str () const;
 
     friend path operator / (const path&, const path&);
     path& operator /= (const path&);
@@ -57,6 +54,7 @@ public:
     static path cwd ();
 
     std::string str () const;
+    const char *c_str () const;
 
     friend bool operator < (const path&, const path&); /* To use as key in container */
 };
@@ -81,9 +79,9 @@ std::string n2hex (T n) {
 void log (int lvl, const char *fmt, ...);
 void set_log_level (int lvl);
 
-#define FAIL_MSG(...) do {   \
+#define die_msg(...) do {                  \
         ev::log (LOG_FAIL, __VA_ARGS__);   \
-        exit (EXIT_FAILURE); \
+        exit (EXIT_FAILURE);               \
     } while (0)
 
 } // namespace ev

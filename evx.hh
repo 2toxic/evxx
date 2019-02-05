@@ -35,7 +35,7 @@ static const char *EV_CC_TEMPLATE =                                             
 
 void print_help (const char *argv0);
 
-struct options {
+struct cmd_options {
     ev::path fname;
     enum {
         CMD_UNKNOWN,
@@ -45,7 +45,7 @@ struct options {
         CMD_RUN,
         CMD_SHOW
     } cmd;
-    bool quiet,    // TODO
+    bool quiet,
          show_sys,
          show_usr,
          show_rss,
@@ -53,7 +53,7 @@ struct options {
          optimize,
          macro;
 
-    options ():
+    cmd_options ():
         fname    (),
         cmd      (CMD_UNKNOWN),
         quiet    (false),
@@ -67,19 +67,19 @@ struct options {
 
 };
 
-options parse_argv (int argc, char **argv);
+cmd_options parse_argv (int argc, char **argv);
 
 std::pair <int, ev::time> exec_cc (std::vector <std::string> args);
-std::vector <std::string> sub_args (ev::repo::options& repo_opts, ev::file_record rec, options opts);
+std::vector <std::string> sub_args (ev::repo::options& repo_opts, ev::file_record rec, cmd_options opts);
 
-int build (ev::path filename, options opts);
-int run   (ev::path filename, options opts);
+int build (ev::path filename, cmd_options opts);
+int run   (ev::path filename, cmd_options opts);
 int show  (ev::path filename);
 int prep  (ev::path filename);
 int init  ();
 
 void report_signal (int retstatus);
-void show_usage (struct rusage usg, options opts);
+void show_usage (struct rusage usg, cmd_options opts);
 
 std::string find_file ();
 std::string find_dir ();

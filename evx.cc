@@ -16,7 +16,7 @@
 #include "evx.hh"
 
 int main (int argc, char **argv) {
-    options opts = parse_argv (argc, argv);
+    cmd_options opts = parse_argv (argc, argv);
     if (opts.quiet)
         ev::set_log_level (LOG_ERR);
     else
@@ -38,23 +38,23 @@ int main (int argc, char **argv) {
     int ret = 0;
     try {
         switch (opts.cmd) {
-            case options::CMD_INIT:
+            case cmd_options::CMD_INIT:
                 return init ();
 
-            case options::CMD_PREP:
+            case cmd_options::CMD_PREP:
                 return prep  (get_filename (false));
 
-            case options::CMD_BUILD:
+            case cmd_options::CMD_BUILD:
                 ret = build (get_filename (true), opts);
                 break;
 
-            case options::CMD_RUN: {
+            case cmd_options::CMD_RUN: {
                 ret = build (get_filename (true), opts);
                 if (ret == 0)
                     ret = run (get_filename (true), opts);
                 break;
             }
-            case options::CMD_SHOW:
+            case cmd_options::CMD_SHOW:
                 ret = show (get_filename (true));
                 break;
             default:
@@ -106,10 +106,10 @@ void print_version () {
     exit (EXIT_SUCCESS);
 }
 
-options parse_argv (int argc, char **argv) {
+cmd_options parse_argv (int argc, char **argv) {
     if (argc < 1)
-        FAIL_MSG ("argc (=%d) < 1", argc);
-    options result;
+        die_msg ("argc (=%d) < 1", argc);
+    cmd_options result;
     int c;
     int no_mod = 0;
     opterr = 0;
@@ -119,11 +119,11 @@ options parse_argv (int argc, char **argv) {
         case 'h': print_help (argv[0]); break;
         case 'v': print_version (); break;
 
-        case 'i': result.cmd = options::CMD_INIT; break;
-        case 'r': result.cmd = options::CMD_RUN; break;
-        case 'b': result.cmd = options::CMD_BUILD; break;
-        case 'p': result.cmd = options::CMD_PREP; break;
-        case 's': result.cmd = options::CMD_SHOW; break;
+        case 'i': result.cmd = cmd_options::CMD_INIT; break;
+        case 'r': result.cmd = cmd_options::CMD_RUN; break;
+        case 'b': result.cmd = cmd_options::CMD_BUILD; break;
+        case 'p': result.cmd = cmd_options::CMD_PREP; break;
+        case 's': result.cmd = cmd_options::CMD_SHOW; break;
 
         case 'n': no_mod ^= 1; break;
         case 'q': result.quiet =    1 ^ no_mod; no_mod = 0; break;
@@ -135,11 +135,11 @@ options parse_argv (int argc, char **argv) {
         case 'D': result.macro =    1 ^ no_mod; no_mod = 0; break;
         case '?':
             if (isprint (optopt))
-                FAIL_MSG ("Unknown option: %c", optopt);
+                die_msg ("Unknown option: %c", optopt);
             else
-                FAIL_MSG ("Unknown symbol: 0x%x", optopt);
+                die_msg ("Unknown symbol: 0x%x", optopt);
         default:
-            FAIL_MSG ("getopt failed");
+            die_msg ("getopt failed");
     }
     }
 
@@ -180,7 +180,7 @@ std::pair <int, ev::time> exec_cc (std::vector <std::string> args) {
 }
 
 
-std::vector <std::string> sub_args (ev::repo::options& repo_opts, ev::file_record rec, options opts) {
+std::vector <std::string> sub_args (ev::repo::options& repo_opts, ev::file_record rec, cmd_options opts) {
     std::vector <std::string> res;
     if (repo_opts.find ("toolchain") != repo_opts.end ())
         res.push_back (repo_opts["toolchain"]);
@@ -225,7 +225,7 @@ int prep (ev::path filename) {
     return 0;
 }
 
-int build (ev::path filename, options opts) {
+int build (ev::path filename, cmd_options opts) {
     auto r = ev::repo ();
     if (!r.exists (filename)) {
         ev::log (LOG_INFO, "new file");
@@ -273,7 +273,7 @@ int show (ev::path filename) {
     return 0;
 }
 
-int run (ev::path filename, options opts) {
+int run (ev::path filename, cmd_options opts) {
     filename = ev::repo ()[filename].exec_filename;
     char * args[2];
     args[0] = const_cast <char *> (filename.c_str ());
@@ -327,7 +327,7 @@ int run (ev::path filename, options opts) {
     return 0;
 }
 
-void show_usage (struct rusage usg, options opts) {
+void show_usage (struct rusage usg, cmd_options opts) {
         ev::time utime (usg.ru_utime.tv_sec, usg.ru_utime.tv_usec * 1000);
         ev::time stime (usg.ru_stime.tv_sec, usg.ru_stime.tv_usec * 1000);
 
