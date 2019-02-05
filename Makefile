@@ -7,7 +7,7 @@ COMMIT_STR=$(shell printf "\\\\\"%s\\\\\"" $$(git rev-parse --short HEAD))
 evx: evx.o util.o repo.o
 	$(CXX) -o evx evx.o util.o repo.o $(CXXLINK)
 
-evx.o: evx.cc evx.hh util.hh repo.hh
+evx.o: evx.cc evx.hh util.hh repo.hh arg.h
 	$(CXX) $(CXXFLAGS) -c -o evx.o evx.cc -DEV_COMMIT=$(COMMIT_STR)
 
 util.o: util.hh util.cc

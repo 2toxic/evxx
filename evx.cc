@@ -14,6 +14,7 @@
 #include <iostream>
 
 #include "evx.hh"
+#include "arg.h"
 
 int main (int argc, char **argv) {
     cmd_options opts = parse_argv (argc, argv);
@@ -69,7 +70,7 @@ int main (int argc, char **argv) {
     return ret;
 }
 
-void print_help (const char *argv0) {
+void print_help (const char *progname) {
     static const char *help = \
         "ev - stupid tool for contests\n"                           \
         "Usage: %s [OPTION...] [target]\n\n"                        \
@@ -90,10 +91,10 @@ void print_help (const char *argv0) {
         "    -m        show rss mem usage\n"                        \
         "    -g        generate %s symbols\n"                       \
         "    -o        optimize with %s\n"                          \
-        "    -D        define %s macro\n\n"                         \
-        "Options may be prefixed with 'n' to invert action\n"       ;
+        "    -d        define %s macro\n\n"                         \
+        "Uppercase options to invert\n"                             ;
 
-    fprintf (stderr, help, argv0, EV_BUILD_SYMBOLS, EV_BUILD_OPTIMIZE, EV_BUILD_MACRO);
+    fprintf (stderr, help, progname, EV_BUILD_SYMBOLS, EV_BUILD_OPTIMIZE, EV_BUILD_MACRO);
     exit (EXIT_SUCCESS);
 }
 
@@ -110,13 +111,10 @@ cmd_options parse_argv (int argc, char **argv) {
     if (argc < 1)
         die_msg ("argc (=%d) < 1", argc);
     cmd_options result;
-    int c;
-    int no_mod = 0;
-    opterr = 0;
+    char **argv0;
 
-    while ((c = getopt (argc, argv, "irbpshvnqyumgoD")) != -1) {
-    switch (c) {
-        case 'h': print_help (argv[0]); break;
+    ARGBEGIN {
+        case 'h': print_help (argv0[0]); break;
         case 'v': print_version (); break;
 
         case 'i': result.cmd = cmd_options::CMD_INIT; break;
@@ -125,26 +123,26 @@ cmd_options parse_argv (int argc, char **argv) {
         case 'p': result.cmd = cmd_options::CMD_PREP; break;
         case 's': result.cmd = cmd_options::CMD_SHOW; break;
 
-        case 'n': no_mod ^= 1; break;
-        case 'q': result.quiet =    1 ^ no_mod; no_mod = 0; break;
-        case 'y': result.show_sys = 1 ^ no_mod; no_mod = 0; break;
-        case 'u': result.show_usr = 1 ^ no_mod; no_mod = 0; break;
-        case 'm': result.show_rss = 1 ^ no_mod; no_mod = 0; break;
-        case 'g': result.symbols =  1 ^ no_mod; no_mod = 0; break;
-        case 'o': result.optimize = 1 ^ no_mod; no_mod = 0; break;
-        case 'D': result.macro =    1 ^ no_mod; no_mod = 0; break;
-        case '?':
-            if (isprint (optopt))
-                die_msg ("Unknown option: %c", optopt);
-            else
-                die_msg ("Unknown symbol: 0x%x", optopt);
+        case 'q': result.quiet =    1; break;
+        case 'y': result.show_sys = 1; break;
+        case 'u': result.show_usr = 1; break;
+        case 'm': result.show_rss = 1; break;
+        case 'g': result.symbols =  1; break;
+        case 'o': result.optimize = 1; break;
+        case 'd': result.macro =    1; break;
+        case 'Q': result.quiet =    0; break;
+        case 'Y': result.show_sys = 0; break;
+        case 'U': result.show_usr = 0; break;
+        case 'M': result.show_rss = 0; break;
+        case 'G': result.symbols =  0; break;
+        case 'O': result.optimize = 0; break;
+        case 'D': result.macro =    0; break;
         default:
-            die_msg ("getopt failed");
-    }
-    }
+            die_msg ("Unknown option: %c", optopt);
+    } ARGEND;
 
-    if (optind < argc)
-        result.fname = ev::path (argv[optind]);
+    if (argc)
+        result.fname = ev::path (*argv);
 
     return result;
 }

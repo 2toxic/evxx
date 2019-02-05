@@ -59,7 +59,7 @@ struct cmd_options {
         quiet    (false),
         show_sys (false),
         show_usr (true),
-        show_rss (true),
+        show_rss (false),
         symbols  (true),
         optimize (false),
         macro    (true)
