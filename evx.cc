@@ -279,50 +279,24 @@ int run (ev::path filename, cmd_options opts) {
     args[0] = const_cast <char *> (filename.c_str ());
     args[1] = NULL;
 
-    int stdin_fwd[2];
-    if (pipe (stdin_fwd) == -1)
-        ev::die_errno ("pipe()", errno);
-
     pid_t pid = fork ();
     if (pid < 0)
         ev::die_errno ("fork()", errno);
 
     else if (pid == 0) {
-        close (stdin_fwd[1]);
-        if (dup2 (stdin_fwd[0], STDIN_FILENO) == -1)
-            ev::die_errno ("dup2()", errno);
-
         execvp (filename.c_str (), args);
         ev::die_errno ("execvp()", errno);
     }
     else {
-        close (stdin_fwd[0]);
-
-        pid_t stdin_fwd_pid = fork ();
-        if (stdin_fwd_pid < 0)
-            ev::die_errno ("fork()", errno);
-
-        else if (stdin_fwd_pid == 0) {
-            char buf[EV_BUFSIZE];
-            while (true) {
-                int rv = read (STDIN_FILENO, buf, EV_BUFSIZE);
-                write (stdin_fwd[1], buf, rv);
-            }
-        }
-
         int retstatus;
         struct rusage usg;
         wait4 (pid, &retstatus, 0, &usg);
 
-        kill (stdin_fwd_pid, SIGTERM);
-
-        /* FIXME write '\n' through signal to stdin_fwd_pid */
-        fprintf (stderr, "\n");
+        /* FIXME write '\n' if last char from program was not '\n' */
+        /* fprintf (stderr, "\n"); */
 
         report_signal (retstatus);
         show_usage (usg, opts);
-
-        waitpid (stdin_fwd_pid, NULL, 0);
     }
     return 0;
 }
