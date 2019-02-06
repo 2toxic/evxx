@@ -178,10 +178,10 @@ std::pair <int, ev::time> exec_cc (std::vector <std::string> args) {
 }
 
 
-std::vector <std::string> sub_args (ev::repo::options& repo_opts, ev::file_record rec, cmd_options opts) {
+std::vector <std::string> sub_args (ev::repo::conf_t& conf, ev::file_record rec, cmd_options opts) {
     std::vector <std::string> res;
-    if (repo_opts.find ("toolchain") != repo_opts.end ())
-        res.push_back (repo_opts["toolchain"]);
+    if (conf.find ("toolchain") != conf.end ())
+        res.push_back (conf["toolchain"]);
     else
         res.push_back ("g++");
 
@@ -196,7 +196,7 @@ std::vector <std::string> sub_args (ev::repo::options& repo_opts, ev::file_recor
     if (opts.macro)
         res.push_back (EV_BUILD_MACRO);
 
-    for (auto kv: repo_opts) {
+    for (auto kv: conf) {
         if (kv.first == "toolchain")
             continue;
 
@@ -236,7 +236,7 @@ int build (ev::path filename, cmd_options opts) {
     need_compile |= r[filename].mod_time < r[filename].mod_time_from_disk ();
 
     if (need_compile) {
-        auto args = sub_args (r.get_options (), r[filename], opts);
+        auto args = sub_args (r.get_conf (), r[filename], opts);
         auto ret = exec_cc (args);
         if (ret.first == 0) {
             ev::log (LOG_INFO, "built in %.3lfs", ret.second.to_sec ());

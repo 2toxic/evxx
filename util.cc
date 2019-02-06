@@ -180,7 +180,7 @@ path path :: dirname () const {
 }
 
 path path :: cwd () {
-    char * c_cwd = get_current_dir_name ();
+    char * c_cwd = getcwd (0, 0);
     path result ((c_cwd));
     free (c_cwd);
     return result;

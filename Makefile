@@ -1,6 +1,6 @@
 CXX=g++
 CFLAGS=-Wall -Wextra -Wshadow -pedantic -Wformat-security
-CXXFLAGS=$(CFLAGS) --std=gnu++11
+CXXFLAGS=$(CFLAGS) --std=gnu++17
 CXXLINK=-lstdc++
 COMMIT_STR=$(shell printf "\\\\\"%s\\\\\"" $$(git rev-parse --short HEAD))
 

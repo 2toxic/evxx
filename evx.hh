@@ -70,7 +70,7 @@ struct cmd_options {
 cmd_options parse_argv (int argc, char **argv);
 
 std::pair <int, ev::time> exec_cc (std::vector <std::string> args);
-std::vector <std::string> sub_args (ev::repo::options& repo_opts, ev::file_record rec, cmd_options opts);
+std::vector <std::string> sub_args (ev::repo::conf_t& conf, ev::file_record rec, cmd_options opts);
 
 int build (ev::path filename, cmd_options opts);
 int run   (ev::path filename, cmd_options opts);

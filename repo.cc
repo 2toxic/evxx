@@ -139,7 +139,7 @@ ev::time file_record :: mod_time_from_disk () {
 repo :: repo ():
     dirname (find_dir ()),
     records (),
-    opts (),
+    conf (),
     rnd (::time (NULL))
 {
     if (!check_dir (dirname))
@@ -148,7 +148,7 @@ repo :: repo ():
     std::fstream is ((dirname / REPO_FILENAME).str (), std::ios_base::in);
     auto data = ini::read_from (is, 0).first;
 
-    opts = data[""];
+    conf = data[""];
     data.erase (data.find (""));
 
     for (auto& pair: data) {
@@ -170,7 +170,7 @@ repo :: ~repo () {
 void repo :: write () const {
     std::fstream os ((dirname / REPO_FILENAME).str (), std::ios_base::out);
     ini::ini_t data;
-    data[""] = opts;
+    data[""] = conf;
 
     for (auto &pair: records) {
         data[pair.first.str ()]["exec_filename"] = pair.second.exec_filename.str ();
@@ -197,8 +197,8 @@ repo repo :: create (ev::path where) {
     return repo ();
 }
 
-repo::options& repo :: get_options () {
-    return opts;
+repo::conf_t& repo :: get_conf () {
+    return conf;
 }
 
 bool repo :: exists (ev::path filename) const {
